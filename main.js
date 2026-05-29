@@ -346,8 +346,8 @@ function restoreData(data) {
 }
 
 //------------- default DOM thats loaded----------------------------------------
-//function seedDefault() {
-  //save();
-//}
+function seedDefault() {
+  save();
+}
 
 window.addEventListener('DOMContentLoaded', () => load());
