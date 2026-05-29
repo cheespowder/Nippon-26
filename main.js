@@ -1,3 +1,32 @@
+// ─── supabase config ─────────────────────
+// linking to the supabase project and github repos
+const SUPABASE_URL = 'https://qealketmijfgcuybhjni.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_cqsyT-qUkKjmhuK7EganCA_owHZRk8I';
+
+async function dbSave(data) {
+  await fetch(`${SUPABASE_URL}/rest/v1/trip_data?id=eq.main`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      'apikey': SUPABASE_KEY,
+      'Authorization': `Bearer ${SUPABASE_KEY}`,
+      'Prefer': 'return=minimal'
+    },
+    body: JSON.stringify({ data, updated_at: new Date() })
+  });
+}
+
+async function dbLoad() {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/trip_data?id=eq.main`, {
+    headers: {
+      'apikey': SUPABASE_KEY,
+      'Authorization': `Bearer ${SUPABASE_KEY}`
+    }
+  });
+  const rows = await res.json();
+  return rows[0]?.data || null;
+}
+
 // trip planner logic
 // handles the crew cards, itinerary builder and key notes
 // everything saves to localStorage so it persists between sessions
@@ -267,51 +296,58 @@ function save() {
   data.keyNotes = keyNotes;
 
   try { localStorage.setItem('japan-trip-v4', JSON.stringify(data)); } catch (e) {}
+  dbSave(data);
 }
 
-function load() {
-  try {
-    const raw = localStorage.getItem('japan-trip-v4');
-    if (raw) {
-      const data = JSON.parse(raw);
+async function load() {
+  let data = null;
 
-      if (data.keyNotes) {
-      data.keyNotes.forEach(n => addKeyNote(n));
-    }
+  try { data = await dbLoad(); } catch (e) {}
 
-      // Restore crew
-      if (data.people) {
-        for (let n = 1; n <= 6; n++) {
-          const p = data.people['p' + n];
-          if (!p) continue;
-          if (p.name)  { document.getElementById('name-'  + n).value = p.name;  updateAvatar(n); }
-          if (p.notes)   document.getElementById('notes-' + n).value = p.notes;
-          if (p.wishes) {
-            p.wishes.forEach(w => addWishItem(n, w));
-          }
-        }
-      }
+  if (!data) {
+    try {
+      const raw = localStorage.getItem('japan-trip-v4');
+      if (raw) data = JSON.parse(raw);
+    } catch (e) {}
+  }
 
-      // Restore itinerary
-      if (data.phaseCounter) phaseCounter = data.phaseCounter;
-      if (data.dayCounter)   dayCounter   = data.dayCounter;
-      if (data.phases && data.phases.length) {
-        data.phases.forEach(p => {
-          phases.push(p);
-          addPhase(p);
-        });
-        return;
+  if (data && (data.phases || data.people)) {
+    restoreData(data);
+  } else {
+    seedDefault();
+  }
+}
+
+function restoreData(data) {
+  if (data.people) {
+    for (let n = 1; n <= 6; n++) {
+      const p = data.people['p' + n];
+      if (!p) continue;
+      if (p.name)  { document.getElementById('name-'  + n).value = p.name;  updateAvatar(n); }
+      if (p.notes)   document.getElementById('notes-' + n).value = p.notes;
+      if (p.wishes) {
+        p.wishes.forEach(w => addWishItem(n, w));
       }
     }
-  } catch (e) {}
+  }
 
-  // No saved data — seed with the suggested itinerary
-  seedDefault();
+  if (data.phaseCounter) phaseCounter = data.phaseCounter;
+  if (data.dayCounter)   dayCounter   = data.dayCounter;
+  if (data.phases && data.phases.length) {
+    data.phases.forEach(p => {
+      phases.push(p);
+      addPhase(p);
+    });
+  }
+
+  if (data.keyNotes) {
+    data.keyNotes.forEach(n => addKeyNote(n));
+  }
 }
 
 //------------- default DOM thats loaded----------------------------------------
-function seedDefault() {
-  save();
-}
+//function seedDefault() {
+  //save();
+//}
 
-window.addEventListener('DOMContentLoaded', load);
+window.addEventListener('DOMContentLoaded', () => load());
