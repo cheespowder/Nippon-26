@@ -1,7 +1,7 @@
 // ─── supabase config ─────────────────────
 // linking to the supabase project and github repos
 const SUPABASE_URL = 'https://qealketmijfgcuybhjni.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_cqsyT-qUkKjmhuK7EganCA_owHZRk8I';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFlYWxrZXRtaWpmZ2N1eWJoam5pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAwNzMxMTEsImV4cCI6MjA5NTY0OTExMX0.4sbNJqp7q2z38KTUK2ijo1DB2bZP89-vESuxKFE8QQs';
 
 async function dbSave(data) {
   await fetch(`${SUPABASE_URL}/rest/v1/trip_data?id=eq.main`, {
