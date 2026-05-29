@@ -276,7 +276,7 @@ function addKeyNote(text) {
 // ─── save / load ─────────────────────────
 // v4 schema: { people, phases, phaseCounter, dayCounter, keyNotes }
 // bump the localStorage key if the schema changes
-function save() {
+async function save() {
   const data = { people: {}, phases: phases, phaseCounter, dayCounter };
 
   for (let n = 1; n <= 6; n++) {
@@ -296,7 +296,7 @@ function save() {
   data.keyNotes = keyNotes;
 
   try { localStorage.setItem('japan-trip-v4', JSON.stringify(data)); } catch (e) {}
-  dbSave(data);
+  await dbSave(data).catch(e => console.error('save failed:', e));
 }
 
 async function load() {
